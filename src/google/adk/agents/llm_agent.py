@@ -432,6 +432,7 @@ class LlmAgent(BaseAgent):
     else:
       return AutoFlow()
 
+  # https://github.com/google/adk-python/issues/976
   def __maybe_save_output_to_state(self, event: Event):
     """Saves the model output to state if needed."""
     if (
@@ -441,7 +442,7 @@ class LlmAgent(BaseAgent):
         and event.content.parts
     ):
       result = ''.join(
-          [part.text if part.text else '' for part in event.content.parts]
+          [part.text if part.text and not part.thought else '' for part in event.content.parts]
       )
       if self.output_schema:
         result = self.output_schema.model_validate_json(result).model_dump(
