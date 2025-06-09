@@ -81,6 +81,7 @@ from .utils import create_empty_state
 from .utils import envs
 from .utils import evals
 from .utils.agent_loader import AgentLoader
+from typing import Mapping
 
 logger = logging.getLogger("google_adk." + __name__)
 
@@ -194,6 +195,7 @@ def get_fast_api_app(
     *,
     agents_dir: str,
     session_db_url: str = "",
+    session_db_kwargs: Optional[Mapping[str, Any]] = None,
     artifact_storage_uri: Optional[str] = None,
     allow_origins: Optional[list[str]] = None,
     web: bool,
@@ -273,7 +275,12 @@ def get_fast_api_app(
           os.environ["GOOGLE_CLOUD_LOCATION"],
       )
     else:
-      session_service = DatabaseSessionService(db_url=session_db_url)
+      # Database session additional settings
+      if session_db_kwargs is None:
+          session_db_kwargs = {}
+      session_service = DatabaseSessionService(
+          db_url=session_db_url, **session_db_kwargs
+      )
   else:
     session_service = InMemorySessionService()
 
