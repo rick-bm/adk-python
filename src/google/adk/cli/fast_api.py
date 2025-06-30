@@ -384,7 +384,8 @@ def get_fast_api_app(
       session_id: str,
       state: Optional[dict[str, Any]] = None,
   ) -> Session:
-    logger.info(f"=========create_session===========>{session_id},{time.time()}")
+    start_at = time.time()
+    logger.info(f"=========create_session==========={session_id},{start_at}")
     # Connect to managed session if agent_engine_id is set.
     app_name = agent_engine_id if agent_engine_id else app_name
     if (
@@ -397,6 +398,8 @@ def get_fast_api_app(
       raise HTTPException(
           status_code=400, detail=f"Session already exists: {session_id}"
       )
+    end_at = time.time()
+    logger.info(f"1=========create_session==========={session_id},{end_at},{end_at-start_at}")
     logger.info("New session created: %s", session_id)
     return await session_service.create_session(
         app_name=app_name, user_id=user_id, state=state, session_id=session_id
@@ -768,6 +771,8 @@ def get_fast_api_app(
 
   @app.post("/run_sse")
   async def agent_run_sse(req: AgentRunRequest) -> StreamingResponse:
+    start_at = time.time()
+    logger.info(f"=========run_sse==========={req.session_id},{start_at}")
     # Connect to managed session if agent_engine_id is set.
     app_name = agent_engine_id if agent_engine_id else req.app_name
     # SSE endpoint
@@ -776,12 +781,18 @@ def get_fast_api_app(
     )
     if not session:
       raise HTTPException(status_code=404, detail="Session not found")
+    step1 = time.time()
+    logger.info(f"1=========run_sse==========={req.session_id},{step1},{step1-start_at}")
 
     # Convert the events to properly formatted SSE
     async def event_generator():
       try:
+        step2 = time.time()
+        logger.info(f"2=========run_sse==========={req.session_id},{step2},{step2 - step1}")
         stream_mode = StreamingMode.SSE if req.streaming else StreamingMode.NONE
         runner = await _get_runner_async(req.app_name)
+        step3 = time.time()
+        logger.info(f"3=========run_sse==========={req.session_id},{step3},{step3 - step2}")
         async for event in runner.run_async(
             user_id=req.user_id,
             session_id=req.session_id,
@@ -791,6 +802,8 @@ def get_fast_api_app(
           # Format as SSE data
           sse_event = event.model_dump_json(exclude_none=True, by_alias=True)
           logger.info("Generated event in agent run streaming: %s", sse_event)
+          step4 = time.time()
+          logger.info(f"4=========run_sse==========={req.session_id},{step4},{step4 - step3}")
           yield f"data: {sse_event}\n\n"
       except Exception as e:
         logger.exception("Error in event_generator: %s", e)

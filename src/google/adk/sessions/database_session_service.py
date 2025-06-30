@@ -357,7 +357,8 @@ class DatabaseSessionService(BaseSessionService):
     # 3. Add the object to the table
     # 4. Build the session object with generated id
     # 5. Return the session
-
+    start_at = time.time()
+    logger.info(f"2=========create_session==========={session_id},{start_at}")
     with self.database_session_factory() as session_factory:
 
       # Fetch app and user states from storage
@@ -366,6 +367,8 @@ class DatabaseSessionService(BaseSessionService):
           StorageUserState, (app_name, user_id)
       )
 
+      step1 = time.time()
+      logger.info(f"3=========create_session==========={session_id},{step1},{step1-start_at}")
       app_state = storage_app_state.state if storage_app_state else {}
       user_state = storage_user_state.state if storage_user_state else {}
 
@@ -378,15 +381,23 @@ class DatabaseSessionService(BaseSessionService):
             app_name=app_name, user_id=user_id, state={}
         )
         session_factory.add(storage_user_state)
+      step2 = time.time()
+      logger.info(f"4=========create_session==========={session_id},{step2},{step2 - step1}")
 
       # Extract state deltas
       app_state_delta, user_state_delta, session_state = _extract_state_delta(
           state
       )
 
+      step3 = time.time()
+      logger.info(f"5=========create_session==========={session_id},{step3},{step3 - step2}")
+
       # Apply state delta
       app_state.update(app_state_delta)
       user_state.update(user_state_delta)
+
+      step4 = time.time()
+      logger.info(f"6=========create_session==========={session_id},{step4},{step4 - step3}")
 
       # Store app and user state
       if app_state_delta:
@@ -406,8 +417,15 @@ class DatabaseSessionService(BaseSessionService):
 
       session_factory.refresh(storage_session)
 
+      step5 = time.time()
+      logger.info(f"7=========create_session==========={session_id},{step5},{step5 - step4}")
+
       # Merge states for response
       merged_state = _merge_state(app_state, user_state, session_state)
+
+      step6 = time.time()
+      logger.info(f"8=========create_session==========={session_id},{step6},{step6 - step5}")
+
       session = Session(
           app_name=str(storage_session.app_name),
           user_id=str(storage_session.user_id),
@@ -415,7 +433,8 @@ class DatabaseSessionService(BaseSessionService):
           state=merged_state,
           last_update_time=storage_session.update_time.timestamp(),
       )
-      logger.info(f"<=========create_session==========={session_id},{time.time()}")
+      end_at = time.time()
+      logger.info(f"9=========create_session==========={session_id},{end_at},{end_at-step6},{end_at-start_at}")
       return session
 
   @override
