@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import copy
+import time
 from datetime import datetime
 import json
 import logging
@@ -414,6 +415,7 @@ class DatabaseSessionService(BaseSessionService):
           state=merged_state,
           last_update_time=storage_session.update_time.timestamp(),
       )
+      logger.info(f"<=========create_session==========={session_id},{time.time()}")
       return session
 
   @override

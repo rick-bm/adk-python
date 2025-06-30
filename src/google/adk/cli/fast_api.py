@@ -384,6 +384,7 @@ def get_fast_api_app(
       session_id: str,
       state: Optional[dict[str, Any]] = None,
   ) -> Session:
+    logger.info(f"=========create_session===========>{session_id},{time.time()}")
     # Connect to managed session if agent_engine_id is set.
     app_name = agent_engine_id if agent_engine_id else app_name
     if (
