@@ -265,7 +265,7 @@ def _convert_foreign_event(event: Event) -> Event:
     return event
 
   content = types.Content()
-  content.role = 'user'
+  content.role = event.content.role
   content.parts = [types.Part(text='For context:')]
   for part in event.content.parts:
     if part.text:
