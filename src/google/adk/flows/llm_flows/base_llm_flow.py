@@ -216,7 +216,7 @@ class BaseLlmFlow(ABC):
   ) -> AsyncGenerator[Event, None]:
     """Receive data from model and process events using BaseLlmConnection."""
 
-    def get_author_for_event(llm_response):
+    def get_author_for_event(llm_response: LlmResponse) -> str:
       """Get the author of the event.
 
       When the model returns transcription, the author is "user". Otherwise, the
