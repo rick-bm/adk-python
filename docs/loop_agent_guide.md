@@ -222,7 +222,7 @@ the durable result is the state value written by the writer's `output_key`.
 ## 5. How the loop works
 
 The whole engine is ~10 lines. Simplified from
-`src/google/adk/agents/loop_agent.py:43-55`:
+`src/google/adk/agents/loop_agent.py:47-54`:
 
 ```python
 times_looped = 0
@@ -293,10 +293,15 @@ Key consequences:
    is delegated to the model. The more of your exit condition is real code,
    the more reliable (and cheaper) your loop is.
 6. **Follow the naming rules.** Agent names must be valid Python identifiers,
-   must be unique within the agent tree, and cannot be `"user"`
-   (`src/google/adk/agents/base_agent.py:361-375`). A single agent instance
-   can be added to only one parent; to reuse a configuration, create two
-   instances with different names
+   and cannot be `"user"` — both enforced by a validator
+   (`src/google/adk/agents/base_agent.py:361-376`). Uniqueness within the
+   agent tree is a documented requirement
+   (`src/google/adk/agents/base_agent.py:72`), but no validator enforces it in
+   this version; keep names unique anyway — event attribution and logs get
+   ambiguous with duplicates. A single agent instance can be added to only one
+   parent, and this one *is* enforced
+   (`src/google/adk/agents/base_agent.py:378-387`). To reuse a configuration,
+   create two instances with different names
    (`src/google/adk/agents/base_agent.py:83-91`).
 7. **Remember the escalation asymmetry.** An approval verdict must escalate;
    a rejection verdict must *not*. Only the passing branch of your checker
